@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/WorldSetup.cs" id="2"]
+
+[node name="Main" type="Node2D"]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+position = Vector2(576, 50)
+y_sort_enabled = true
+script = ExtResource("2")
+
+[node name="Player" parent="." instance=ExtResource("1")]
+position = Vector2(576, 210)
