@@ -13,3 +13,4 @@ script = ExtResource("2")
 
 [node name="Player" parent="." instance=ExtResource("1")]
 position = Vector2(576, 210)
+z_index = 1
