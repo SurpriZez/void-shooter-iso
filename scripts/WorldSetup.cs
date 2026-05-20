@@ -9,7 +9,17 @@ public partial class WorldSetup : TileMapLayer
     public override void _Ready()
     {
         var image = Image.CreateEmpty(64, 32, false, Image.Format.Rgba8);
-        image.Fill(TileColor);
+        var borderColor = TileColor.Darkened(0.35f);
+        for (int y = 0; y < 32; y++)
+        {
+            for (int x = 0; x < 64; x++)
+            {
+                // distance from diamond edge (0 = edge, 1 = center, <0 = outside)
+                float edgeDist = 1.0f - (Mathf.Abs(x - 32f) / 32f + Mathf.Abs(y - 16f) / 16f);
+                if (edgeDist < 0f) continue;
+                image.SetPixel(x, y, edgeDist < 0.1f ? borderColor : TileColor);
+            }
+        }
         var texture = ImageTexture.CreateFromImage(image);
 
         var source = new TileSetAtlasSource();
