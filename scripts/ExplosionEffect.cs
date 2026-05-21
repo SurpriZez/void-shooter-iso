@@ -34,8 +34,8 @@ public partial class ExplosionEffect : ItemEffect
         mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
         mat.ShadingMode  = BaseMaterial3D.ShadingModeEnum.Unshaded;
         flash.MaterialOverride = mat;
-        flash.GlobalPosition = anchor.GlobalPosition + new Vector3(0, 0.03f, 0);
         anchor.GetParent().AddChild(flash);
+        flash.GlobalPosition = anchor.GlobalPosition + new Vector3(0, 0.03f, 0);
 
         var tween = flash.CreateTween();
         tween.TweenProperty(mat, "albedo_color:a", 0f, 0.25f);
