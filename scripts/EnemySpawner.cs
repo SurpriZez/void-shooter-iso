@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 public partial class EnemySpawner : Node2D
 {
@@ -8,15 +9,7 @@ public partial class EnemySpawner : Node2D
     [Export] public float WaveDelay = 2f;
     [Export] public float SpawnWarningDuration = 1.5f;
 
-    private static readonly ItemData[] ItemPool = new[]
-    {
-        new ItemData { ItemName = "Running Shoes",  IconColor = new Color(0.2f, 0.8f, 1f),   SpeedBonus = 40f },
-        new ItemData { ItemName = "Damage Up",       IconColor = new Color(1f, 0.3f, 0.3f),   MeleeDamageBonus = 15, ProjectileDamageBonus = 5 },
-        new ItemData { ItemName = "Trigger Finger",  IconColor = new Color(1f, 0.9f, 0.2f),   AttackCooldownBonus = -0.08f },
-        new ItemData { ItemName = "Iron Heart",      IconColor = new Color(1f, 0.5f, 0.6f),   MaxHealthBonus = 1 },
-        new ItemData { ItemName = "Shockwave",       IconColor = new Color(0.5f, 0.2f, 1f),   KnockbackBonus = 150f },
-    };
-
+    private ItemData[] _pool;
     private WorldSetup _worldSetup;
 
     private enum State { Active, ItemPhase, Cooldown, Spawning }
@@ -44,10 +37,34 @@ public partial class EnemySpawner : Node2D
             SpawnItemPedestal();
     }
 
+    private ItemData[] GetPool()
+    {
+        if (_pool != null) return _pool;
+        var items = new List<ItemData>();
+        using var dir = DirAccess.Open("res://items");
+        if (dir != null)
+        {
+            dir.ListDirBegin();
+            string name;
+            while ((name = dir.GetNext()) != "")
+            {
+                if (!dir.CurrentIsDir() && name.EndsWith(".tres"))
+                {
+                    var item = GD.Load<ItemData>("res://items/" + name);
+                    if (item != null) items.Add(item);
+                }
+            }
+            dir.ListDirEnd();
+        }
+        return _pool = items.ToArray();
+    }
+
     private void SpawnItemPedestal()
     {
         _state = State.ItemPhase;
-        var item = ItemPool[GD.RandRange(0, ItemPool.Length - 1)];
+        var pool = GetPool();
+        var item = pool.Length > 0 ? pool[GD.RandRange(0, pool.Length - 1)] : null;
+        if (item == null) { _state = State.Cooldown; _timer = WaveDelay; return; }
         var scene = ItemPedestalScene ?? GD.Load<PackedScene>("res://scenes/ItemPedestal.tscn");
         var pedestal = scene.Instantiate<ItemPedestal>();
         pedestal.Initialize(item, () =>
@@ -55,7 +72,8 @@ public partial class EnemySpawner : Node2D
             _state = State.Cooldown;
             _timer = WaveDelay;
         });
-        pedestal.GlobalPosition = GlobalPosition;
+        var centerCell = new Vector2I(_worldSetup.GridWidth / 2, _worldSetup.GridHeight / 2);
+        pedestal.GlobalPosition = _worldSetup.ToGlobal(_worldSetup.MapToLocal(centerCell));
         pedestal.ZIndex = 1;
         GetParent().AddChild(pedestal);
     }

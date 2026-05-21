@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 public partial class Enemy : CharacterBody2D
 {
@@ -12,6 +13,7 @@ public partial class Enemy : CharacterBody2D
     private Player _player;
     private float _stunTimer;
     private Vector2 _knockbackVelocity;
+    private readonly List<StatusEffect> _statusEffects = new();
 
     public override void _Ready()
     {
@@ -27,9 +29,38 @@ public partial class Enemy : CharacterBody2D
         _stunTimer = stunDuration < 0 ? StunDuration : stunDuration;
     }
 
+    public void ApplyStatus(StatusEffect effect)
+    {
+        foreach (var existing in _statusEffects)
+        {
+            if (existing.Id == effect.Id)
+            {
+                existing.OnStack(effect);
+                return;
+            }
+        }
+        _statusEffects.Add(effect);
+    }
+
+    public bool HasStatus(string id)
+    {
+        foreach (var s in _statusEffects)
+            if (s.Id == id) return true;
+        return false;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         if (_player == null || !IsInstanceValid(_player)) return;
+
+        for (int i = _statusEffects.Count - 1; i >= 0; i--)
+        {
+            if (_health <= 0) break;
+            if (_statusEffects[i].Update(this, (float)delta))
+                _statusEffects.RemoveAt(i);
+        }
+
+        Modulate = HasStatus("burn") ? new Color(1f, 0.5f, 0.15f) : Colors.White;
 
         if (_stunTimer > 0)
         {
@@ -52,24 +83,31 @@ public partial class Enemy : CharacterBody2D
     public void TakeDamage(int amount)
     {
         _health -= amount;
-        SpawnDamageText(amount);
+        SpawnDamageLabel(amount, new Color(1f, 0.9f, 0.1f), 20, 40f);
         if (_health <= 0) QueueFree();
     }
 
-    private void SpawnDamageText(int amount)
+    public void TakeDotDamage(int amount)
+    {
+        _health -= amount;
+        SpawnDamageLabel(amount, new Color(1f, 0.5f, 0.1f), 13, 22f);
+        if (_health <= 0) QueueFree();
+    }
+
+    private void SpawnDamageLabel(int amount, Color color, int fontSize, float riseY)
     {
         var label = new Label();
         label.Text = amount.ToString();
-        label.Position = new Vector2(-15, -60);
-        label.AddThemeColorOverride("font_color", new Color(1f, 0.9f, 0.1f));
-        label.AddThemeFontSizeOverride("font_size", 20);
+        label.Position = new Vector2(GD.RandRange(-15, 15), -55);
+        label.AddThemeColorOverride("font_color", color);
+        label.AddThemeFontSizeOverride("font_size", fontSize);
         label.ZIndex = 10;
         AddChild(label);
 
         var tween = CreateTween();
         tween.SetParallel(true);
-        tween.TweenProperty(label, "position", label.Position + new Vector2(0, -40), 0.8f);
-        tween.TweenProperty(label, "modulate:a", 0f, 0.8f);
+        tween.TweenProperty(label, "position", label.Position + new Vector2(0, -riseY), 0.7f);
+        tween.TweenProperty(label, "modulate:a", 0f, 0.7f);
         tween.SetParallel(false);
         tween.TweenCallback(Callable.From(label.QueueFree));
     }

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://d4by1ysfgd2b4" path="res://scripts/ItemData.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+ItemName = "Wide Swipe"
+Description = "Your blade cuts a wider arc. Melee range +25, cone angle +20 degrees."
+IconColor = Color(0.3, 1, 0.5, 1)
+MeleeRangeBonus = 25.0
+MeleeAngleBonus = 20.0

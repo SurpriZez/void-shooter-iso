@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://d4by1ysfgd2b4" path="res://scripts/ItemData.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+ItemName = "Damage Up"
+Description = "Raw power coursing through your strikes. +15 melee, +5 projectile."
+IconColor = Color(1, 0.3, 0.3, 1)
+MeleeDamageBonus = 15
+ProjectileDamageBonus = 5

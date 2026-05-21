@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://d4by1ysfgd2b4" path="res://scripts/ItemData.cs" id="1"]
+[ext_resource type="Resource" path="res://items/effects/burn_effect.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+ItemName = "Napalm"
+Description = "Bullets and strikes ignite enemies. 8 DPS burn for 3 seconds."
+IconColor = Color(1, 0.45, 0, 1)
+Effects = Array[Resource]([ExtResource("2")])

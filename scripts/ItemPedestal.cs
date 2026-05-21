@@ -6,6 +6,7 @@ public partial class ItemPedestal : Area2D
     public ItemData Item { get; private set; }
     private Action _onPickup;
     private bool _pickedUp;
+    private Hud _hud;
 
     public void Initialize(ItemData item, Action onPickup)
     {
@@ -31,12 +32,28 @@ public partial class ItemPedestal : Area2D
              .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
 
         BodyEntered += OnBodyEntered;
+
+        // Larger info zone — shows item panel before player walks into pickup radius
+        var infoZone = new Area2D();
+        infoZone.CollisionLayer = 0;
+        infoZone.CollisionMask = 1;
+        var infoShape = new CollisionShape2D();
+        var circle = new CircleShape2D();
+        circle.Radius = 65f;
+        infoShape.Shape = circle;
+        infoZone.AddChild(infoShape);
+        AddChild(infoZone);
+        infoZone.BodyEntered += body => { if (body is Player) GetHud()?.ShowItemInfo(Item); };
+        infoZone.BodyExited  += body => { if (body is Player) GetHud()?.HideItemInfo(); };
     }
+
+    private Hud GetHud() => _hud ??= GetTree().GetFirstNodeInGroup("hud") as Hud;
 
     private void OnBodyEntered(Node2D body)
     {
         if (_pickedUp || body is not Player player) return;
         _pickedUp = true;
+        GetHud()?.HideItemInfo();
         player.PickupItem(Item);
         _onPickup?.Invoke();
         QueueFree();

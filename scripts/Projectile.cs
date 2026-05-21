@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 public partial class Projectile : CharacterBody2D
 {
@@ -8,6 +9,7 @@ public partial class Projectile : CharacterBody2D
     [Export] public float KnockbackForce = 120f;
     [Export] public float KnockbackStun = 0.15f;
     public Vector2 Direction;
+    public List<ItemEffect> Effects { get; } = new();
     private float _timeAlive;
 
     public override void _PhysicsProcess(double delta)
@@ -23,6 +25,8 @@ public partial class Projectile : CharacterBody2D
             {
                 enemy.TakeDamage(Damage);
                 enemy.ApplyKnockback(Direction.Normalized(), KnockbackForce, KnockbackStun);
+                foreach (var effect in Effects)
+                    effect.OnProjectileHit(enemy, this);
                 QueueFree();
                 return;
             }
