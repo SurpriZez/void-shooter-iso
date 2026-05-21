@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
 [ext_resource type="Script" uid="uid://bx00fsp7s7oxs" path="res://scripts/WorldSetup.cs" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/Hud.tscn" id="4"]
 
 [node name="Main" type="Node2D" unique_id=693747969]
 y_sort_enabled = true
@@ -25,3 +26,5 @@ z_index = 1
 position = Vector2(620, 320)
 MaxHealth = 1000
 BodyColor = Color(0.5, 0.1, 0.8, 1)
+
+[node name="Hud" parent="." instance=ExtResource("4")]

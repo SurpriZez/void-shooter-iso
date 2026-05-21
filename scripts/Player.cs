@@ -5,11 +5,27 @@ public partial class Player : CharacterBody2D
     [Export] public float Speed = 150f;
     [Export] public float AttackCooldown = 0.3f;
     [Export] public int MeleeDamage = 25;
+    [Export] public int MaxHealth = 3;
     [Export] public PackedScene ProjectileScene;
+
+    public int Health { get; private set; }
 
     private enum Weapon { Melee, Ranged }
     private Weapon _weapon = Weapon.Ranged;
     private float _cooldown;
+
+    public override void _Ready()
+    {
+        Health = MaxHealth;
+        AddToGroup("player");
+    }
+
+    public void TakeDamage(int amount)
+    {
+        Health = Mathf.Max(0, Health - amount);
+        if (Health == 0)
+            GetTree().ReloadCurrentScene();
+    }
 
     public override void _PhysicsProcess(double delta)
     {
