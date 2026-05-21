@@ -4,6 +4,7 @@ public partial class Player : CharacterBody2D
 {
     [Export] public float Speed = 150f;
     [Export] public float AttackCooldown = 0.3f;
+    [Export] public int MeleeDamage = 25;
     [Export] public PackedScene ProjectileScene;
 
     private enum Weapon { Melee, Ranged }
@@ -36,10 +37,10 @@ public partial class Player : CharacterBody2D
             if (Input.IsKeyPressed(Key.Right)) attackDir = Vector2.Right;
             foreach (int dev in Input.GetConnectedJoypads())
             {
-                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadUp))    attackDir = Vector2.Up;
-                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadDown))  attackDir = Vector2.Down;
-                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadLeft))  attackDir = Vector2.Left;
-                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadRight)) attackDir = Vector2.Right;
+                if (Input.IsJoyButtonPressed(dev, JoyButton.DpadUp))    attackDir = Vector2.Up;
+                if (Input.IsJoyButtonPressed(dev, JoyButton.DpadDown))  attackDir = Vector2.Down;
+                if (Input.IsJoyButtonPressed(dev, JoyButton.DpadLeft))  attackDir = Vector2.Left;
+                if (Input.IsJoyButtonPressed(dev, JoyButton.DpadRight)) attackDir = Vector2.Right;
             }
             if (attackDir != Vector2.Zero) Attack(attackDir);
         }
@@ -86,6 +87,19 @@ public partial class Player : CharacterBody2D
         marker.Position = dir * 30;
         AddChild(marker);
         GetTree().CreateTimer(0.15).Timeout += () => marker.QueueFree();
+
+        var shape = new RectangleShape2D();
+        shape.Size = new Vector2(28, 28);
+
+        var query = new PhysicsShapeQueryParameters2D();
+        query.Shape = shape;
+        query.Transform = new Transform2D(0, GlobalPosition + dir * 30);
+        query.CollisionMask = 4;
+
+        var hits = GetWorld2D().DirectSpaceState.IntersectShape(query);
+        foreach (var hit in hits)
+            if (hit["collider"].AsGodotObject() is Enemy enemy)
+                enemy.TakeDamage(MeleeDamage);
     }
 
     private void SpawnProjectile(Vector2 dir)
