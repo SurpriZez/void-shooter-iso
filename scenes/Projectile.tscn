@@ -1,24 +1,30 @@
-[gd_scene format=3 uid="uid://54ndb8a8q6r3"]
+[gd_scene load_steps=5 format=3 uid="uid://54ndb8a8q6r3"]
 
 [ext_resource type="Script" uid="uid://bk1jd8f2m46iy" path="res://scripts/Projectile.cs" id="1"]
 
-[sub_resource type="CircleShape2D" id="1"]
-radius = 5.0
+[sub_resource type="SphereMesh" id="Mesh_1"]
+radius = 0.12
+height = 0.24
 
-[node name="Projectile" type="CharacterBody2D" unique_id=1393679713]
-z_index = 1
+[sub_resource type="StandardMaterial3D" id="Mat_1"]
+albedo_color = Color(1, 0.9, 0.2, 1)
+emission_enabled = true
+emission = Color(1, 0.7, 0.1, 1)
+shading_mode = 1
+
+[sub_resource type="SphereShape3D" id="Shape_1"]
+radius = 0.12
+
+[node name="Projectile" type="CharacterBody3D"]
 collision_layer = 2
 collision_mask = 4
 script = ExtResource("1")
-KnockbackForce = 60.0
-KnockbackStun = 0.05
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=150882874]
-shape = SubResource("1")
+[node name="Mesh" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.12, 0)
+mesh = SubResource("Mesh_1")
+surface_material_override/0 = SubResource("Mat_1")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1947008898]
-offset_left = -5.0
-offset_top = -5.0
-offset_right = 5.0
-offset_bottom = 5.0
-color = Color(1, 0.9, 0.2, 1)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.12, 0)
+shape = SubResource("Shape_1")

@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1")
 ItemName = "Shockwave"
-Description = "Every hit sends enemies flying. +150 knockback force."
+Description = "Every hit sends enemies flying. +8 knockback force."
 IconColor = Color(0.5, 0.2, 1, 1)
-KnockbackBonus = 150.0
+KnockbackBonus = 8.0

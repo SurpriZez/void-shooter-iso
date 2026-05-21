@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 ItemName = "Wide Swipe"
-Description = "Your blade cuts a wider arc. Melee range +25, cone angle +20 degrees."
+Description = "Your blade cuts a wider arc. Melee range +1, cone angle +20 degrees."
 IconColor = Color(0.3, 1, 0.5, 1)
-MeleeRangeBonus = 25.0
+MeleeRangeBonus = 1.0
 MeleeAngleBonus = 20.0

@@ -1,7 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
-public partial class EnemySpawner : Node2D
+public partial class EnemySpawner : Node3D
 {
     [Export] public PackedScene EnemyScene;
     [Export] public PackedScene ItemPedestalScene;
@@ -18,7 +18,7 @@ public partial class EnemySpawner : Node2D
 
     public override void _Ready()
     {
-        _worldSetup = GetParent().GetNode<WorldSetup>("TileMapLayer");
+        _worldSetup = GetParent().GetNode<WorldSetup>("WorldSetup");
         Callable.From(SpawnWave).CallDeferred();
     }
 
@@ -73,8 +73,7 @@ public partial class EnemySpawner : Node2D
             _timer = WaveDelay;
         });
         var centerCell = new Vector2I(_worldSetup.GridWidth / 2, _worldSetup.GridHeight / 2);
-        pedestal.GlobalPosition = _worldSetup.ToGlobal(_worldSetup.MapToLocal(centerCell));
-        pedestal.ZIndex = 1;
+        pedestal.GlobalPosition = _worldSetup.GridToWorld(centerCell);
         GetParent().AddChild(pedestal);
     }
 
@@ -82,25 +81,31 @@ public partial class EnemySpawner : Node2D
     {
         _state = State.Spawning;
 
-        var positions = new Vector2[EnemyCount];
-        var markers  = new Polygon2D[EnemyCount];
+        var positions = new Vector3[EnemyCount];
+        var markers  = new MeshInstance3D[EnemyCount];
 
         for (int i = 0; i < EnemyCount; i++)
         {
             positions[i] = GetRandomEdgePosition();
 
-            var marker = new Polygon2D();
-            marker.Polygon = new Vector2[] { new(0,-16), new(16,0), new(0,16), new(-16,0) };
-            marker.Color = new Color(1f, 0.2f, 0.2f, 0.9f);
-            marker.GlobalPosition = positions[i];
-            marker.ZIndex = 2;
+            var marker = new MeshInstance3D();
+            var quad = new QuadMesh();
+            quad.Size = new Vector2(0.7f, 0.7f);
+            marker.Mesh = quad;
+            marker.RotationDegrees = new Vector3(-90, 45, 0);
+            var mat = new StandardMaterial3D();
+            mat.AlbedoColor = new Color(1f, 0.2f, 0.2f, 0.9f);
+            mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
+            mat.ShadingMode  = BaseMaterial3D.ShadingModeEnum.Unshaded;
+            marker.MaterialOverride = mat;
+            marker.GlobalPosition = positions[i] + Vector3.Up * 0.01f;
             GetParent().AddChild(marker);
             markers[i] = marker;
 
             var tween = marker.CreateTween();
             tween.SetLoops();
-            tween.TweenProperty(marker, "modulate:a", 0.1f, 0.25f);
-            tween.TweenProperty(marker, "modulate:a", 1.0f, 0.25f);
+            tween.TweenProperty(mat, "albedo_color:a", 0.1f, 0.25f);
+            tween.TweenProperty(mat, "albedo_color:a", 1.0f, 0.25f);
         }
 
         GetTree().CreateTimer(SpawnWarningDuration).Timeout += () =>
@@ -110,14 +115,13 @@ public partial class EnemySpawner : Node2D
                 if (IsInstanceValid(markers[i])) markers[i].QueueFree();
                 var enemy = EnemyScene.Instantiate<Enemy>();
                 enemy.GlobalPosition = positions[i];
-                enemy.ZIndex = 1;
                 GetParent().AddChild(enemy);
             }
             _state = State.Active;
         };
     }
 
-    private Vector2 GetRandomEdgePosition()
+    private Vector3 GetRandomEdgePosition()
     {
         int w = _worldSetup.GridWidth;
         int h = _worldSetup.GridHeight;
@@ -130,6 +134,6 @@ public partial class EnemySpawner : Node2D
             _ => new Vector2I(0, GD.RandRange(0, h - 1)),
         };
 
-        return _worldSetup.ToGlobal(_worldSetup.MapToLocal(cell));
+        return _worldSetup.GridToWorld(cell);
     }
 }

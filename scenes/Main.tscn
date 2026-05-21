@@ -7,22 +7,15 @@
 [ext_resource type="PackedScene" path="res://scenes/EnemySpawner.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/ItemPedestal.tscn" id="6"]
 
-[node name="Main" type="Node2D" unique_id=693747969]
-y_sort_enabled = true
+[node name="Main" type="Node3D"]
 
-[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1642937909]
-y_sort_enabled = true
-position = Vector2(576, 50)
+[node name="WorldSetup" type="Node3D" parent="."]
 script = ExtResource("2")
-GridHeight = 30
 
-[node name="Player" parent="." unique_id=272037821 instance=ExtResource("1")]
-z_index = 1
-position = Vector2(576, 210)
+[node name="Player" parent="." instance=ExtResource("1")]
 
-[node name="EnemySpawner" parent="." unique_id=1606008646 instance=ExtResource("5")]
-position = Vector2(576, 300)
+[node name="EnemySpawner" parent="." instance=ExtResource("5")]
 EnemyScene = ExtResource("3")
 ItemPedestalScene = ExtResource("6")
 
-[node name="Hud" parent="." unique_id=1072620392 instance=ExtResource("4")]
+[node name="Hud" parent="." instance=ExtResource("4")]

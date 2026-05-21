@@ -4,5 +4,5 @@
 
 [resource]
 script = ExtResource("1")
-Radius = 55.0
+Radius = 3.0
 SplashDamage = 18

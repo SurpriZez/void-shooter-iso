@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class ItemPedestal : Area2D
+public partial class ItemPedestal : Area3D
 {
     public ItemData Item { get; private set; }
     private Action _onPickup;
@@ -16,31 +16,49 @@ public partial class ItemPedestal : Area2D
 
     public override void _Ready()
     {
-        var baseNode = GetNode<Polygon2D>("Base");
-        baseNode.Polygon = new Vector2[] { new(-20,-4), new(20,-4), new(20,4), new(-20,4) };
-        baseNode.Color = new Color(0.45f, 0.4f, 0.35f);
+        // Base platform
+        var baseMesh = new MeshInstance3D();
+        var baseBox = new BoxMesh();
+        baseBox.Size = new Vector3(0.8f, 0.08f, 0.4f);
+        baseMesh.Mesh = baseBox;
+        var baseMat = new StandardMaterial3D();
+        baseMat.AlbedoColor = new Color(0.45f, 0.4f, 0.35f);
+        baseMesh.MaterialOverride = baseMat;
+        baseMesh.Position = new Vector3(0, 0.04f, 0);
+        AddChild(baseMesh);
 
-        var icon = GetNode<Polygon2D>("Icon");
-        icon.Polygon = new Vector2[] { new(0,-14), new(10,6), new(-10,6) };
-        icon.Color = Item?.IconColor ?? new Color(0.6f, 0.2f, 0.8f);
+        // Floating icon
+        var icon = new MeshInstance3D();
+        icon.Name = "Icon";
+        var sphere = new SphereMesh();
+        sphere.Radius = 0.18f;
+        sphere.Height = 0.36f;
+        icon.Mesh = sphere;
+        var iconMat = new StandardMaterial3D();
+        iconMat.AlbedoColor = Item?.IconColor ?? new Color(0.6f, 0.2f, 0.8f);
+        iconMat.EmissionEnabled = true;
+        iconMat.Emission = (Item?.IconColor ?? new Color(0.6f, 0.2f, 0.8f)) * 0.4f;
+        icon.MaterialOverride = iconMat;
+        icon.Position = new Vector3(0, 0.55f, 0);
+        AddChild(icon);
 
         var tween = icon.CreateTween();
         tween.SetLoops();
-        tween.TweenProperty(icon, "position:y", icon.Position.Y - 6f, 0.8f)
+        tween.TweenProperty(icon, "position:y", 0.7f, 0.8f)
              .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
-        tween.TweenProperty(icon, "position:y", icon.Position.Y, 0.8f)
+        tween.TweenProperty(icon, "position:y", 0.55f, 0.8f)
              .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
 
         BodyEntered += OnBodyEntered;
 
-        // Larger info zone — shows item panel before player walks into pickup radius
-        var infoZone = new Area2D();
+        // Info zone — larger radius, shows panel before pickup
+        var infoZone = new Area3D();
         infoZone.CollisionLayer = 0;
-        infoZone.CollisionMask = 1;
-        var infoShape = new CollisionShape2D();
-        var circle = new CircleShape2D();
-        circle.Radius = 65f;
-        infoShape.Shape = circle;
+        infoZone.CollisionMask  = 1;
+        var infoShape = new CollisionShape3D();
+        var infoSphere = new SphereShape3D();
+        infoSphere.Radius = 3f;
+        infoShape.Shape = infoSphere;
         infoZone.AddChild(infoShape);
         AddChild(infoZone);
         infoZone.BodyEntered += body => { if (body is Player) GetHud()?.ShowItemInfo(Item); };
@@ -49,7 +67,7 @@ public partial class ItemPedestal : Area2D
 
     private Hud GetHud() => _hud ??= GetTree().GetFirstNodeInGroup("hud") as Hud;
 
-    private void OnBodyEntered(Node2D body)
+    private void OnBodyEntered(Node3D body)
     {
         if (_pickedUp || body is not Player player) return;
         _pickedUp = true;

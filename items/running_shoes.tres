@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1")
 ItemName = "Running Shoes"
-Description = "Lightweight soles that let you outrun anything. +40 speed."
+Description = "Lightweight soles that let you outrun anything. +2 speed."
 IconColor = Color(0.2, 0.8, 1, 1)
-SpeedBonus = 40.0
+SpeedBonus = 2.0

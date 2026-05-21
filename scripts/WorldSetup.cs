@@ -1,40 +1,53 @@
 using Godot;
 
-public partial class WorldSetup : TileMapLayer
+public partial class WorldSetup : Node3D
 {
-    [Export] public int GridWidth = 10;
+    [Export] public int GridWidth  = 10;
     [Export] public int GridHeight = 10;
+    [Export] public float TileSize = 2f;
     [Export] public Color TileColor = new Color(0.35f, 0.55f, 0.75f);
 
     public override void _Ready()
     {
-        var image = Image.CreateEmpty(64, 32, false, Image.Format.Rgba8);
-        var borderColor = TileColor.Darkened(0.35f);
-        for (int y = 0; y < 32; y++)
-        {
-            for (int x = 0; x < 64; x++)
-            {
-                // distance from diamond edge (0 = edge, 1 = center, <0 = outside)
-                float edgeDist = 1.0f - (Mathf.Abs(x - 32f) / 32f + Mathf.Abs(y - 16f) / 16f);
-                if (edgeDist < 0f) continue;
-                image.SetPixel(x, y, edgeDist < 0.1f ? borderColor : TileColor);
-            }
-        }
-        var texture = ImageTexture.CreateFromImage(image);
+        // Floor collision — single static body covering the whole grid
+        var floor = new StaticBody3D();
+        floor.CollisionLayer = 16;
+        floor.CollisionMask  = 0;
+        var floorShape = new CollisionShape3D();
+        var box = new BoxShape3D();
+        box.Size = new Vector3(GridWidth * TileSize, 0.2f, GridHeight * TileSize);
+        floorShape.Shape = box;
+        floor.AddChild(floorShape);
+        floor.Position = new Vector3(0, -0.1f, 0);
+        AddChild(floor);
 
-        var source = new TileSetAtlasSource();
-        source.Texture = texture;
-        source.TextureRegionSize = new Vector2I(64, 32);
-        source.CreateTile(new Vector2I(0, 0));
+        // Visual tiles — shared mesh, unique positions
+        var tileMesh = new BoxMesh();
+        tileMesh.Size = new Vector3(TileSize - 0.05f, 0.1f, TileSize - 0.05f);
 
-        var tileSet = new TileSet();
-        tileSet.TileShape = TileSet.TileShapeEnum.Isometric;
-        tileSet.TileSize = new Vector2I(64, 32);
-        int sourceId = tileSet.AddSource(source);
-        TileSet = tileSet; // must assign before SetCell so source IDs are valid
+        var mat = new StandardMaterial3D();
+        mat.AlbedoColor = TileColor;
+        mat.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
+
+        var borderMat = new StandardMaterial3D();
+        borderMat.AlbedoColor = TileColor.Darkened(0.3f);
+        borderMat.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
 
         for (int x = 0; x < GridWidth; x++)
-            for (int y = 0; y < GridHeight; y++)
-                SetCell(new Vector2I(x, y), sourceId, new Vector2I(0, 0));
+            for (int z = 0; z < GridHeight; z++)
+            {
+                var tile = new MeshInstance3D();
+                tile.Mesh = tileMesh;
+                tile.MaterialOverride = (x + z) % 2 == 0 ? mat : borderMat;
+                tile.Position = GridToWorld(new Vector2I(x, z));
+                AddChild(tile);
+            }
+    }
+
+    public Vector3 GridToWorld(Vector2I cell)
+    {
+        float x = (cell.X - GridWidth  / 2.0f + 0.5f) * TileSize;
+        float z = (cell.Y - GridHeight / 2.0f + 0.5f) * TileSize;
+        return new Vector3(x, 0, z);
     }
 }

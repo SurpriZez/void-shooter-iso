@@ -1,20 +1,15 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/ItemPedestal.cs" id="1"]
+[ext_resource type="Script" uid="uid://eos7nsvl78ey" path="res://scripts/ItemPedestal.cs" id="1"]
 
-[sub_resource type="CircleShape2D" id="1"]
-radius = 20.0
+[sub_resource type="SphereShape3D" id="Shape_1"]
+radius = 0.7
 
-[node name="ItemPedestal" type="Area2D"]
+[node name="ItemPedestal" type="Area3D"]
 collision_layer = 8
 collision_mask = 1
-z_index = 1
 script = ExtResource("1")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("1")
-
-[node name="Base" type="Polygon2D" parent="."]
-
-[node name="Icon" type="Polygon2D" parent="."]
-position = Vector2(0, -22)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.4, 0)
+shape = SubResource("Shape_1")
