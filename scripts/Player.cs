@@ -81,25 +81,49 @@ public partial class Player : CharacterBody2D
 
     private void SpawnMeleeHitbox(Vector2 dir)
     {
-        var marker = new Polygon2D();
-        marker.Polygon = new Vector2[] { new(-14,-14), new(14,-14), new(14,14), new(-14,14) };
-        marker.Color = new Color(1f, 0.55f, 0.1f, 0.85f);
-        marker.Position = dir * 30;
-        AddChild(marker);
-        GetTree().CreateTimer(0.15).Timeout += () => marker.QueueFree();
-
+        // hit detection — instant shape query
         var shape = new RectangleShape2D();
         shape.Size = new Vector2(28, 28);
-
         var query = new PhysicsShapeQueryParameters2D();
         query.Shape = shape;
         query.Transform = new Transform2D(0, GlobalPosition + dir * 30);
         query.CollisionMask = 4;
-
         var hits = GetWorld2D().DirectSpaceState.IntersectShape(query);
         foreach (var hit in hits)
             if (hit["collider"].AsGodotObject() is Enemy enemy)
                 enemy.TakeDamage(MeleeDamage);
+
+        // sweep visual
+        float baseAngle = dir.Angle();
+        float sweepHalf = Mathf.DegToRad(55f);
+
+        var sweep = new Polygon2D();
+        sweep.Polygon = MakeSector(50f, Mathf.DegToRad(-25f), Mathf.DegToRad(25f), 8);
+        sweep.Color = new Color(1f, 0.6f, 0.1f, 0.9f);
+        sweep.Rotation = baseAngle - sweepHalf;
+        sweep.ZIndex = 2;
+        AddChild(sweep);
+
+        var tween = CreateTween();
+        tween.SetParallel(true);
+        tween.TweenProperty(sweep, "rotation", baseAngle + sweepHalf, 0.18f)
+             .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
+        tween.TweenProperty(sweep, "modulate:a", 0f, 0.18f)
+             .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+        tween.SetParallel(false);
+        tween.TweenCallback(Callable.From(sweep.QueueFree));
+    }
+
+    private static Vector2[] MakeSector(float radius, float startAngle, float endAngle, int segments)
+    {
+        var pts = new Vector2[segments + 2];
+        pts[0] = Vector2.Zero;
+        for (int i = 0; i <= segments; i++)
+        {
+            float a = Mathf.Lerp(startAngle, endAngle, i / (float)segments);
+            pts[i + 1] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius;
+        }
+        return pts;
     }
 
     private void SpawnProjectile(Vector2 dir)
