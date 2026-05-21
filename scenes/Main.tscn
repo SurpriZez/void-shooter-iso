@@ -13,16 +13,15 @@ y_sort_enabled = true
 y_sort_enabled = true
 position = Vector2(576, 50)
 script = ExtResource("2")
-GridWidth = 16
-GridHeight = 16
+GridWidth = 100
+GridHeight = 20
 
 [node name="Player" parent="." unique_id=272037821 instance=ExtResource("1")]
 z_index = 1
 position = Vector2(576, 210)
 
-[node name="EnemySpawner" parent="." instance=ExtResource("5")]
+[node name="EnemySpawner" parent="." unique_id=1606008646 instance=ExtResource("5")]
 position = Vector2(576, 300)
 EnemyScene = ExtResource("3")
-SpawnRadius = 320.0
 
-[node name="Hud" parent="." instance=ExtResource("4")]
+[node name="Hud" parent="." unique_id=1072620392 instance=ExtResource("4")]
