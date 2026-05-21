@@ -48,7 +48,8 @@ public partial class EnemySpawner : Node2D
     {
         _state = State.ItemPhase;
         var item = ItemPool[GD.RandRange(0, ItemPool.Length - 1)];
-        var pedestal = ItemPedestalScene.Instantiate<ItemPedestal>();
+        var scene = ItemPedestalScene ?? GD.Load<PackedScene>("res://scenes/ItemPedestal.tscn");
+        var pedestal = scene.Instantiate<ItemPedestal>();
         pedestal.Initialize(item, () =>
         {
             _state = State.Cooldown;
