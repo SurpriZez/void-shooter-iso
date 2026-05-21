@@ -12,7 +12,7 @@ public partial class EnemySpawner : Node2D
     private State _state = State.Active;
     private float _timer;
 
-    public override void _Ready() => SpawnWave();
+    public override void _Ready() => Callable.From(SpawnWave).CallDeferred();
 
     public override void _Process(double delta)
     {
