@@ -1,16 +1,21 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bv2es5t3xoxhb"]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
-[ext_resource type="Script" path="res://scripts/WorldSetup.cs" id="2"]
+[ext_resource type="Script" uid="uid://bx00fsp7s7oxs" path="res://scripts/WorldSetup.cs" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=693747969]
 y_sort_enabled = true
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1642937909]
+y_sort_enabled = true
 position = Vector2(576, 50)
-y_sort_enabled = true
 script = ExtResource("2")
 
-[node name="Player" parent="." instance=ExtResource("1")]
-position = Vector2(576, 210)
+[node name="Player" parent="." unique_id=272037821 instance=ExtResource("1")]
 z_index = 1
+position = Vector2(576, 210)
+
+[node name="Enemy" parent="." instance=ExtResource("3")]
+z_index = 1
+position = Vector2(700, 280)
