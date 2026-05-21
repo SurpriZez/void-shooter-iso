@@ -4,15 +4,20 @@ public partial class EnemySpawner : Node2D
 {
     [Export] public PackedScene EnemyScene;
     [Export] public int EnemyCount = 3;
-    [Export] public float SpawnRadius = 320f;
     [Export] public float WaveDelay = 2f;
     [Export] public float SpawnWarningDuration = 1.5f;
+
+    private WorldSetup _worldSetup;
 
     private enum State { Active, Cooldown, Spawning }
     private State _state = State.Active;
     private float _timer;
 
-    public override void _Ready() => Callable.From(SpawnWave).CallDeferred();
+    public override void _Ready()
+    {
+        _worldSetup = GetParent().GetNode<WorldSetup>("TileMapLayer");
+        Callable.From(SpawnWave).CallDeferred();
+    }
 
     public override void _Process(double delta)
     {
@@ -36,14 +41,12 @@ public partial class EnemySpawner : Node2D
     {
         _state = State.Spawning;
 
-        float angleOffset = GD.Randf() * Mathf.Tau;
         var positions = new Vector2[EnemyCount];
         var markers  = new Polygon2D[EnemyCount];
 
         for (int i = 0; i < EnemyCount; i++)
         {
-            float angle = angleOffset + (float)i / EnemyCount * Mathf.Tau;
-            positions[i] = GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * SpawnRadius;
+            positions[i] = GetRandomEdgePosition();
 
             var marker = new Polygon2D();
             marker.Polygon = new Vector2[] { new(0,-16), new(16,0), new(0,16), new(-16,0) };
@@ -64,7 +67,6 @@ public partial class EnemySpawner : Node2D
             for (int i = 0; i < EnemyCount; i++)
             {
                 if (IsInstanceValid(markers[i])) markers[i].QueueFree();
-
                 var enemy = EnemyScene.Instantiate<Enemy>();
                 enemy.GlobalPosition = positions[i];
                 enemy.ZIndex = 1;
@@ -72,5 +74,21 @@ public partial class EnemySpawner : Node2D
             }
             _state = State.Active;
         };
+    }
+
+    private Vector2 GetRandomEdgePosition()
+    {
+        int w = _worldSetup.GridWidth;
+        int h = _worldSetup.GridHeight;
+
+        Vector2I cell = GD.RandRange(0, 3) switch
+        {
+            0 => new Vector2I(GD.RandRange(0, w - 1), 0),         // top-right edge
+            1 => new Vector2I(w - 1, GD.RandRange(0, h - 1)),     // bottom-right edge
+            2 => new Vector2I(GD.RandRange(0, w - 1), h - 1),     // bottom-left edge
+            _ => new Vector2I(0, GD.RandRange(0, h - 1)),         // top-left edge
+        };
+
+        return _worldSetup.ToGlobal(_worldSetup.MapToLocal(cell));
     }
 }
