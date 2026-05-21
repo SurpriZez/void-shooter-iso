@@ -26,6 +26,23 @@ public partial class Player : CharacterBody2D
 
         Velocity = direction * Speed;
         MoveAndSlide();
+
+        if (_weapon == Weapon.Ranged)
+        {
+            var attackDir = Vector2.Zero;
+            if (Input.IsKeyPressed(Key.Up))    attackDir = Vector2.Up;
+            if (Input.IsKeyPressed(Key.Down))  attackDir = Vector2.Down;
+            if (Input.IsKeyPressed(Key.Left))  attackDir = Vector2.Left;
+            if (Input.IsKeyPressed(Key.Right)) attackDir = Vector2.Right;
+            foreach (int dev in Input.GetConnectedJoypads())
+            {
+                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadUp))    attackDir = Vector2.Up;
+                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadDown))  attackDir = Vector2.Down;
+                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadLeft))  attackDir = Vector2.Left;
+                if (Input.IsJoypadButtonPressed(dev, JoyButton.DpadRight)) attackDir = Vector2.Right;
+            }
+            if (attackDir != Vector2.Zero) Attack(attackDir);
+        }
     }
 
     public override void _Input(InputEvent ev)
