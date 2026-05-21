@@ -6,6 +6,7 @@ public partial class Player : CharacterBody2D
     [Export] public float AttackCooldown = 0.3f;
     [Export] public int MeleeDamage = 25;
     [Export] public int MaxHealth = 3;
+    [Export] public float IframeDuration = 1.0f;
     [Export] public PackedScene ProjectileScene;
 
     public int Health { get; private set; }
@@ -13,6 +14,7 @@ public partial class Player : CharacterBody2D
     private enum Weapon { Melee, Ranged }
     private Weapon _weapon = Weapon.Ranged;
     private float _cooldown;
+    private float _iframeCooldown;
 
     public override void _Ready()
     {
@@ -22,6 +24,8 @@ public partial class Player : CharacterBody2D
 
     public void TakeDamage(int amount)
     {
+        if (_iframeCooldown > 0) return;
+        _iframeCooldown = IframeDuration;
         Health = Mathf.Max(0, Health - amount);
         if (Health == 0)
             GetTree().ReloadCurrentScene();
@@ -30,6 +34,7 @@ public partial class Player : CharacterBody2D
     public override void _PhysicsProcess(double delta)
     {
         _cooldown -= (float)delta;
+        _iframeCooldown -= (float)delta;
 
         var direction = Vector2.Zero;
 
