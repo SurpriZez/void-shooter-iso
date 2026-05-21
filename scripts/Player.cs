@@ -36,6 +36,10 @@ public partial class Player : CharacterBody2D
         _cooldown -= (float)delta;
         _iframeCooldown -= (float)delta;
 
+        Modulate = _iframeCooldown > 0
+            ? new Color(1, 1, 1, Mathf.Sin(_iframeCooldown * 25f) > 0 ? 1f : 0.15f)
+            : Colors.White;
+
         var direction = Vector2.Zero;
 
         if (Input.IsKeyPressed(Key.W)) direction += new Vector2(0f, -1f);
