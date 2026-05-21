@@ -1,17 +1,21 @@
 using Godot;
+using System.Collections.Generic;
 
 public partial class Player : CharacterBody2D
 {
     [Export] public float Speed = 150f;
     [Export] public float AttackCooldown = 0.3f;
     [Export] public int MeleeDamage = 25;
+    [Export] public int ProjectileDamage = 10;
     [Export] public float KnockbackForce = 350f;
     [Export] public int MaxHealth = 3;
     [Export] public float IframeDuration = 1.0f;
     [Export] public PackedScene ProjectileScene;
 
     public int Health { get; private set; }
+    public IReadOnlyList<ItemData> Items => _items;
 
+    private readonly List<ItemData> _items = new();
     private enum Weapon { Melee, Ranged }
     private Weapon _weapon = Weapon.Ranged;
     private float _cooldown;
@@ -30,6 +34,19 @@ public partial class Player : CharacterBody2D
         Health = Mathf.Max(0, Health - amount);
         if (Health == 0)
             GetTree().ReloadCurrentScene();
+    }
+
+    public void PickupItem(ItemData item)
+    {
+        _items.Add(item);
+        Speed            += item.SpeedBonus;
+        AttackCooldown    = Mathf.Max(0.05f, AttackCooldown + item.AttackCooldownBonus);
+        MeleeDamage      += item.MeleeDamageBonus;
+        ProjectileDamage += item.ProjectileDamageBonus;
+        KnockbackForce   += item.KnockbackBonus;
+        MaxHealth        += item.MaxHealthBonus;
+        if (item.MaxHealthBonus > 0)
+            Health = Mathf.Min(Health + item.MaxHealthBonus, MaxHealth);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -86,10 +103,10 @@ public partial class Player : CharacterBody2D
         else if (ev is InputEventJoypadButton j && j.Pressed)
             switch (j.ButtonIndex)
             {
-                case JoyButton.DpadUp:        Attack(Vector2.Up);    break;
-                case JoyButton.DpadDown:        Attack(Vector2.Down);  break;
-                case JoyButton.DpadLeft:         Attack(Vector2.Left);  break;
-                case JoyButton.DpadRight:         Attack(Vector2.Right); break;
+                case JoyButton.DpadUp:       Attack(Vector2.Up);    break;
+                case JoyButton.DpadDown:     Attack(Vector2.Down);  break;
+                case JoyButton.DpadLeft:     Attack(Vector2.Left);  break;
+                case JoyButton.DpadRight:    Attack(Vector2.Right); break;
                 case JoyButton.LeftShoulder: SwitchWeapon();        break;
             }
     }
@@ -107,7 +124,6 @@ public partial class Player : CharacterBody2D
 
     private void SpawnMeleeHitbox(Vector2 dir)
     {
-        // hit detection — instant shape query
         var shape = new RectangleShape2D();
         shape.Size = new Vector2(28, 28);
         var query = new PhysicsShapeQueryParameters2D();
@@ -122,7 +138,6 @@ public partial class Player : CharacterBody2D
                 enemy.ApplyKnockback(dir, KnockbackForce);
             }
 
-        // sweep visual
         float baseAngle = dir.Angle();
         float sweepHalf = Mathf.DegToRad(55f);
 
@@ -159,6 +174,7 @@ public partial class Player : CharacterBody2D
     {
         var proj = ProjectileScene.Instantiate<Projectile>();
         proj.Direction = dir;
+        proj.Damage = ProjectileDamage;
         proj.GlobalPosition = GlobalPosition;
         GetParent().AddChild(proj);
     }

@@ -3,13 +3,23 @@ using Godot;
 public partial class EnemySpawner : Node2D
 {
     [Export] public PackedScene EnemyScene;
+    [Export] public PackedScene ItemPedestalScene;
     [Export] public int EnemyCount = 3;
     [Export] public float WaveDelay = 2f;
     [Export] public float SpawnWarningDuration = 1.5f;
 
+    private static readonly ItemData[] ItemPool = new[]
+    {
+        new ItemData { ItemName = "Running Shoes",  IconColor = new Color(0.2f, 0.8f, 1f),   SpeedBonus = 40f },
+        new ItemData { ItemName = "Damage Up",       IconColor = new Color(1f, 0.3f, 0.3f),   MeleeDamageBonus = 15, ProjectileDamageBonus = 5 },
+        new ItemData { ItemName = "Trigger Finger",  IconColor = new Color(1f, 0.9f, 0.2f),   AttackCooldownBonus = -0.08f },
+        new ItemData { ItemName = "Iron Heart",      IconColor = new Color(1f, 0.5f, 0.6f),   MaxHealthBonus = 1 },
+        new ItemData { ItemName = "Shockwave",       IconColor = new Color(0.5f, 0.2f, 1f),   KnockbackBonus = 150f },
+    };
+
     private WorldSetup _worldSetup;
 
-    private enum State { Active, Cooldown, Spawning }
+    private enum State { Active, ItemPhase, Cooldown, Spawning }
     private State _state = State.Active;
     private float _timer;
 
@@ -21,7 +31,7 @@ public partial class EnemySpawner : Node2D
 
     public override void _Process(double delta)
     {
-        if (_state == State.Spawning) return;
+        if (_state == State.Spawning || _state == State.ItemPhase) return;
 
         if (_state == State.Cooldown)
         {
@@ -31,10 +41,22 @@ public partial class EnemySpawner : Node2D
         }
 
         if (GetTree().GetNodesInGroup("enemy").Count == 0)
+            SpawnItemPedestal();
+    }
+
+    private void SpawnItemPedestal()
+    {
+        _state = State.ItemPhase;
+        var item = ItemPool[GD.RandRange(0, ItemPool.Length - 1)];
+        var pedestal = ItemPedestalScene.Instantiate<ItemPedestal>();
+        pedestal.Initialize(item, () =>
         {
             _state = State.Cooldown;
             _timer = WaveDelay;
-        }
+        });
+        pedestal.GlobalPosition = GlobalPosition;
+        pedestal.ZIndex = 1;
+        GetParent().AddChild(pedestal);
     }
 
     private void SpawnWave()
@@ -83,10 +105,10 @@ public partial class EnemySpawner : Node2D
 
         Vector2I cell = GD.RandRange(0, 3) switch
         {
-            0 => new Vector2I(GD.RandRange(0, w - 1), 0),         // top-right edge
-            1 => new Vector2I(w - 1, GD.RandRange(0, h - 1)),     // bottom-right edge
-            2 => new Vector2I(GD.RandRange(0, w - 1), h - 1),     // bottom-left edge
-            _ => new Vector2I(0, GD.RandRange(0, h - 1)),         // top-left edge
+            0 => new Vector2I(GD.RandRange(0, w - 1), 0),
+            1 => new Vector2I(w - 1, GD.RandRange(0, h - 1)),
+            2 => new Vector2I(GD.RandRange(0, w - 1), h - 1),
+            _ => new Vector2I(0, GD.RandRange(0, h - 1)),
         };
 
         return _worldSetup.ToGlobal(_worldSetup.MapToLocal(cell));

@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/Hud.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/EnemySpawner.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/ItemPedestal.tscn" id="6"]
 
 [node name="Main" type="Node2D" unique_id=693747969]
 y_sort_enabled = true
@@ -13,8 +14,8 @@ y_sort_enabled = true
 y_sort_enabled = true
 position = Vector2(576, 50)
 script = ExtResource("2")
-GridWidth = 100
-GridHeight = 20
+GridWidth = 30
+GridHeight = 30
 
 [node name="Player" parent="." unique_id=272037821 instance=ExtResource("1")]
 z_index = 1
@@ -23,5 +24,6 @@ position = Vector2(576, 210)
 [node name="EnemySpawner" parent="." unique_id=1606008646 instance=ExtResource("5")]
 position = Vector2(576, 300)
 EnemyScene = ExtResource("3")
+ItemPedestalScene = ExtResource("6")
 
 [node name="Hud" parent="." unique_id=1072620392 instance=ExtResource("4")]
