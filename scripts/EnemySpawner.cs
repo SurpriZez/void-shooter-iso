@@ -73,8 +73,8 @@ public partial class EnemySpawner : Node3D
             _timer = WaveDelay;
         });
         var centerCell = new Vector2I(_worldSetup.GridWidth / 2, _worldSetup.GridHeight / 2);
-        pedestal.GlobalPosition = _worldSetup.GridToWorld(centerCell);
         GetParent().AddChild(pedestal);
+        pedestal.GlobalPosition = _worldSetup.GridToWorld(centerCell);
     }
 
     private void SpawnWave()
@@ -98,8 +98,8 @@ public partial class EnemySpawner : Node3D
             mat.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
             mat.ShadingMode  = BaseMaterial3D.ShadingModeEnum.Unshaded;
             marker.MaterialOverride = mat;
-            marker.GlobalPosition = positions[i] + Vector3.Up * 0.01f;
             GetParent().AddChild(marker);
+            marker.GlobalPosition = positions[i] + Vector3.Up * 0.01f;
             markers[i] = marker;
 
             var tween = marker.CreateTween();
@@ -114,8 +114,8 @@ public partial class EnemySpawner : Node3D
             {
                 if (IsInstanceValid(markers[i])) markers[i].QueueFree();
                 var enemy = EnemyScene.Instantiate<Enemy>();
-                enemy.GlobalPosition = positions[i];
                 GetParent().AddChild(enemy);
+                enemy.GlobalPosition = positions[i];
             }
             _state = State.Active;
         };
