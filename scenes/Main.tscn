@@ -19,3 +19,9 @@ position = Vector2(576, 210)
 [node name="Enemy" parent="." instance=ExtResource("3")]
 z_index = 1
 position = Vector2(700, 280)
+
+[node name="TankEnemy" parent="." instance=ExtResource("3")]
+z_index = 1
+position = Vector2(620, 320)
+MaxHealth = 1000
+BodyColor = Color(0.5, 0.1, 0.8, 1)

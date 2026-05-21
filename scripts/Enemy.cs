@@ -3,9 +3,14 @@ using Godot;
 public partial class Enemy : CharacterBody2D
 {
     [Export] public int MaxHealth = 100;
+    [Export] public Color BodyColor = new Color(0.9f, 0.2f, 0.2f, 1f);
     private int _health;
 
-    public override void _Ready() => _health = MaxHealth;
+    public override void _Ready()
+    {
+        _health = MaxHealth;
+        GetNode<ColorRect>("ColorRect").Color = BodyColor;
+    }
 
     public void TakeDamage(int amount)
     {
