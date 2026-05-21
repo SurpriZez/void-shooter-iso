@@ -14,7 +14,6 @@ y_sort_enabled = true
 y_sort_enabled = true
 position = Vector2(576, 50)
 script = ExtResource("2")
-GridWidth = 30
 GridHeight = 30
 
 [node name="Player" parent="." unique_id=272037821 instance=ExtResource("1")]
