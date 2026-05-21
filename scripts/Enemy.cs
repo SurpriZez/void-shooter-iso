@@ -18,6 +18,7 @@ public partial class Enemy : CharacterBody2D
         _health = MaxHealth;
         GetNode<ColorRect>("ColorRect").Color = BodyColor;
         _player = GetTree().GetFirstNodeInGroup("player") as Player;
+        AddToGroup("enemy");
     }
 
     public void ApplyKnockback(Vector2 direction, float force, float stunDuration = -1f)
