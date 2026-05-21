@@ -5,6 +5,7 @@ public partial class Player : CharacterBody2D
     [Export] public float Speed = 150f;
     [Export] public float AttackCooldown = 0.3f;
     [Export] public int MeleeDamage = 25;
+    [Export] public float KnockbackForce = 350f;
     [Export] public int MaxHealth = 3;
     [Export] public float IframeDuration = 1.0f;
     [Export] public PackedScene ProjectileScene;
@@ -116,7 +117,10 @@ public partial class Player : CharacterBody2D
         var hits = GetWorld2D().DirectSpaceState.IntersectShape(query);
         foreach (var hit in hits)
             if (hit["collider"].AsGodotObject() is Enemy enemy)
+            {
                 enemy.TakeDamage(MeleeDamage);
+                enemy.ApplyKnockback(dir, KnockbackForce);
+            }
 
         // sweep visual
         float baseAngle = dir.Angle();

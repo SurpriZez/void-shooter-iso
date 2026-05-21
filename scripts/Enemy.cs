@@ -6,9 +6,12 @@ public partial class Enemy : CharacterBody2D
     [Export] public Color BodyColor = new Color(0.9f, 0.2f, 0.2f, 1f);
     [Export] public float Speed = 60f;
     [Export] public int ContactDamage = 1;
+    [Export] public float StunDuration = 0.4f;
 
     private int _health;
     private Player _player;
+    private float _stunTimer;
+    private Vector2 _knockbackVelocity;
 
     public override void _Ready()
     {
@@ -17,12 +20,27 @@ public partial class Enemy : CharacterBody2D
         _player = GetTree().GetFirstNodeInGroup("player") as Player;
     }
 
+    public void ApplyKnockback(Vector2 direction, float force)
+    {
+        _knockbackVelocity = direction * force;
+        _stunTimer = StunDuration;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         if (_player == null || !IsInstanceValid(_player)) return;
 
-        var dir = (_player.GlobalPosition - GlobalPosition).Normalized();
-        Velocity = dir * Speed;
+        if (_stunTimer > 0)
+        {
+            _stunTimer -= (float)delta;
+            _knockbackVelocity = _knockbackVelocity.Lerp(Vector2.Zero, 10f * (float)delta);
+            Velocity = _knockbackVelocity;
+        }
+        else
+        {
+            Velocity = (_player.GlobalPosition - GlobalPosition).Normalized() * Speed;
+        }
+
         MoveAndSlide();
 
         for (int i = 0; i < GetSlideCollisionCount(); i++)
