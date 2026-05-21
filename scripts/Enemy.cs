@@ -20,10 +20,10 @@ public partial class Enemy : CharacterBody2D
         _player = GetTree().GetFirstNodeInGroup("player") as Player;
     }
 
-    public void ApplyKnockback(Vector2 direction, float force)
+    public void ApplyKnockback(Vector2 direction, float force, float stunDuration = -1f)
     {
         _knockbackVelocity = direction * force;
-        _stunTimer = StunDuration;
+        _stunTimer = stunDuration < 0 ? StunDuration : stunDuration;
     }
 
     public override void _PhysicsProcess(double delta)
