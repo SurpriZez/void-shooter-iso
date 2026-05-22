@@ -24,7 +24,7 @@ public partial class Player : CharacterBody3D
     private Weapon _weapon = Weapon.Ranged;
     private float _cooldown;
     private float _iframeCooldown;
-    private MeshInstance3D _mesh;
+    private Node3D _model;
     private Camera3D _camera;
 
     // Screen-space directions mapped to isometric world XZ
@@ -37,7 +37,7 @@ public partial class Player : CharacterBody3D
     {
         Health = MaxHealth;
         AddToGroup("player");
-        _mesh = GetNode<MeshInstance3D>("Mesh");
+        _model = GetNode<Node3D>("Model");
 
         _camera = new Camera3D();
         _camera.Projection = Camera3D.ProjectionType.Orthogonal;
@@ -106,7 +106,7 @@ public partial class Player : CharacterBody3D
         _cooldown -= (float)delta;
         _iframeCooldown -= (float)delta;
 
-        _mesh.Visible = _iframeCooldown <= 0 || Mathf.Sin(_iframeCooldown * 25f) > 0;
+        _model.Visible = _iframeCooldown <= 0 || Mathf.Sin(_iframeCooldown * 25f) > 0;
 
         var direction = Vector3.Zero;
         if (Input.IsKeyPressed(Key.W)) direction += IsoUp;
