@@ -40,15 +40,20 @@ public partial class Player : CharacterBody3D
         Health = MaxHealth;
         AddToGroup("player");
         _model = GetNode<Node3D>("Model");
-        _animPlayer = _model.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
 
-        if (_animPlayer != null)
-        {
-            LoadAnimation("res://art/temp/Run With Sword.fbx", "run", true);
-            LoadAnimation("res://art/temp/Stable Sword Inward Slash.fbx", "slash_in", false);
-            LoadAnimation("res://art/temp/Stable Sword Outward Slash.fbx", "slash_out", false);
-            _animPlayer.AnimationFinished += OnAnimationFinished;
-        }
+        // Stop any built-in AnimationPlayers in the model to avoid conflicts
+        foreach (var node in _model.FindChildren("*", "AnimationPlayer", true, false))
+            if (node is AnimationPlayer existing) existing.Stop();
+
+        // Own AnimationPlayer on Player, root points to Model so tracks resolve correctly
+        _animPlayer = new AnimationPlayer();
+        AddChild(_animPlayer);
+        _animPlayer.RootNode = _animPlayer.GetPathTo(_model);
+
+        LoadAnimation("res://art/temp/Run With Sword.fbx", "run", true);
+        LoadAnimation("res://art/temp/Stable Sword Inward Slash.fbx", "slash_in", false);
+        LoadAnimation("res://art/temp/Stable Sword Outward Slash.fbx", "slash_out", false);
+        _animPlayer.AnimationFinished += OnAnimationFinished;
 
         _camera = new Camera3D();
         _camera.Projection = Camera3D.ProjectionType.Orthogonal;
@@ -62,34 +67,38 @@ public partial class Player : CharacterBody3D
     {
         var scene = GD.Load<PackedScene>(fbxPath);
         var inst = scene.Instantiate();
-        var srcPlayer = inst.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
-        if (srcPlayer == null || srcPlayer.GetAnimationList().Length == 0) { inst.Free(); return; }
 
-        string srcAnimName = srcPlayer.GetAnimationList()[0];
-        var anim = (Animation)srcPlayer.GetAnimation(srcAnimName).Duplicate();
+        // Find AnimationPlayer by type (not name — FBX import names vary)
+        var srcPlayers = inst.FindChildren("*", "AnimationPlayer", true, false);
+        if (srcPlayers.Count == 0) { inst.Free(); return; }
+        var srcPlayer = srcPlayers[0] as AnimationPlayer;
+
+        var anims = srcPlayer.GetAnimationList();
+        if (anims.Length == 0) { inst.Free(); return; }
+
+        var anim = (Animation)srcPlayer.GetAnimation(anims[0]).Duplicate();
         anim.LoopMode = loop ? Animation.LoopModeEnum.Linear : Animation.LoopModeEnum.None;
 
-        // Remap skeleton track paths from source FBX to match the Y Bot model's hierarchy
-        var tgtSkeleton = _model.FindChild("Skeleton3D", true, false) as Skeleton3D;
-        if (tgtSkeleton != null)
+        // Extract source skeleton path prefix from first bone track
+        string srcSkPath = null;
+        for (int i = 0; i < anim.GetTrackCount(); i++)
         {
-            string tgtSkPath = _model.GetPathTo(tgtSkeleton).ToString();
-            string srcSkPath = null;
-            for (int i = 0; i < anim.GetTrackCount(); i++)
-            {
-                string p = anim.TrackGetPath(i).ToString();
-                int colon = p.IndexOf(':');
-                if (colon > 0) { srcSkPath = p.Substring(0, colon); break; }
-            }
-            if (srcSkPath != null && srcSkPath != tgtSkPath)
-            {
+            string p = anim.TrackGetPath(i).ToString();
+            int c = p.IndexOf(':');
+            if (c > 0) { srcSkPath = p.Substring(0, c); break; }
+        }
+        // Remap skeleton path from source FBX to match Model's skeleton hierarchy
+        var tgtSkeletons = _model.FindChildren("*", "Skeleton3D", true, false);
+        if (tgtSkeletons.Count > 0 && srcSkPath != null)
+        {
+            string tgtSkPath = _model.GetPathTo(tgtSkeletons[0]).ToString();
+            if (srcSkPath != tgtSkPath)
                 for (int i = 0; i < anim.GetTrackCount(); i++)
                 {
                     string p = anim.TrackGetPath(i).ToString();
                     if (p.StartsWith(srcSkPath))
                         anim.TrackSetPath(i, tgtSkPath + p.Substring(srcSkPath.Length));
                 }
-            }
         }
 
         AnimationLibrary lib;
