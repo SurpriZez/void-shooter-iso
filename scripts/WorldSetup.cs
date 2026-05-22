@@ -27,11 +27,9 @@ public partial class WorldSetup : Node3D
 
         var mat = new StandardMaterial3D();
         mat.AlbedoColor = TileColor;
-        mat.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
 
         var borderMat = new StandardMaterial3D();
         borderMat.AlbedoColor = TileColor.Darkened(0.3f);
-        borderMat.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
 
         for (int x = 0; x < GridWidth; x++)
             for (int z = 0; z < GridHeight; z++)
