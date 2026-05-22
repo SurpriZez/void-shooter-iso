@@ -26,8 +26,10 @@ public partial class Player : CharacterBody3D
     private float _iframeCooldown;
     private Node3D _model;
     private Camera3D _camera;
+    private AnimationPlayer _animPlayer;
+    private bool _slashToggle;
+    private bool _isAttacking;
 
-    // Screen-space directions mapped to isometric world XZ
     private static readonly Vector3 IsoUp    = new Vector3(-1, 0, -1).Normalized();
     private static readonly Vector3 IsoDown  = new Vector3( 1, 0,  1).Normalized();
     private static readonly Vector3 IsoLeft  = new Vector3(-1, 0,  1).Normalized();
@@ -38,6 +40,15 @@ public partial class Player : CharacterBody3D
         Health = MaxHealth;
         AddToGroup("player");
         _model = GetNode<Node3D>("Model");
+        _animPlayer = _model.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
+
+        if (_animPlayer != null)
+        {
+            LoadAnimation("res://art/temp/Run With Sword.fbx", "run", true);
+            LoadAnimation("res://art/temp/Stable Sword Inward Slash.fbx", "slash_in", false);
+            LoadAnimation("res://art/temp/Stable Sword Outward Slash.fbx", "slash_out", false);
+            _animPlayer.AnimationFinished += OnAnimationFinished;
+        }
 
         _camera = new Camera3D();
         _camera.Projection = Camera3D.ProjectionType.Orthogonal;
@@ -45,6 +56,59 @@ public partial class Player : CharacterBody3D
         AddChild(_camera);
         _camera.Position = new Vector3(10, 12, 10);
         _camera.LookAt(GlobalPosition, Vector3.Up);
+    }
+
+    private void LoadAnimation(string fbxPath, string animName, bool loop)
+    {
+        var scene = GD.Load<PackedScene>(fbxPath);
+        var inst = scene.Instantiate();
+        var srcPlayer = inst.FindChild("AnimationPlayer", true, false) as AnimationPlayer;
+        if (srcPlayer == null || srcPlayer.GetAnimationList().Length == 0) { inst.Free(); return; }
+
+        string srcAnimName = srcPlayer.GetAnimationList()[0];
+        var anim = (Animation)srcPlayer.GetAnimation(srcAnimName).Duplicate();
+        anim.LoopMode = loop ? Animation.LoopModeEnum.Linear : Animation.LoopModeEnum.None;
+
+        // Remap skeleton track paths from source FBX to match the Y Bot model's hierarchy
+        var tgtSkeleton = _model.FindChild("Skeleton3D", true, false) as Skeleton3D;
+        if (tgtSkeleton != null)
+        {
+            string tgtSkPath = _model.GetPathTo(tgtSkeleton).ToString();
+            string srcSkPath = null;
+            for (int i = 0; i < anim.GetTrackCount(); i++)
+            {
+                string p = anim.TrackGetPath(i).ToString();
+                int colon = p.IndexOf(':');
+                if (colon > 0) { srcSkPath = p.Substring(0, colon); break; }
+            }
+            if (srcSkPath != null && srcSkPath != tgtSkPath)
+            {
+                for (int i = 0; i < anim.GetTrackCount(); i++)
+                {
+                    string p = anim.TrackGetPath(i).ToString();
+                    if (p.StartsWith(srcSkPath))
+                        anim.TrackSetPath(i, tgtSkPath + p.Substring(srcSkPath.Length));
+                }
+            }
+        }
+
+        AnimationLibrary lib;
+        if (_animPlayer.HasAnimationLibrary(""))
+            lib = _animPlayer.GetAnimationLibrary("");
+        else { lib = new AnimationLibrary(); _animPlayer.AddAnimationLibrary("", lib); }
+
+        if (lib.HasAnimation(animName)) lib.RemoveAnimation(animName);
+        lib.AddAnimation(animName, anim);
+        inst.Free();
+    }
+
+    private void OnAnimationFinished(StringName animName)
+    {
+        _isAttacking = false;
+        if (Velocity.Length() > 0.1f && _animPlayer.HasAnimation("run"))
+            _animPlayer.Play("run");
+        else
+            _animPlayer.Stop();
     }
 
     public void TakeDamage(int amount)
@@ -123,6 +187,24 @@ public partial class Player : CharacterBody3D
         _camera.GlobalPosition = GlobalPosition + new Vector3(10, 12, 10);
         _camera.LookAt(GlobalPosition, Vector3.Up);
 
+        // Rotate model to face movement direction (or keep last facing)
+        if (direction != Vector3.Zero)
+            _model.GlobalRotation = new Vector3(0, Mathf.Atan2(direction.X, direction.Z), 0);
+
+        // Drive movement animation
+        if (_animPlayer != null && !_isAttacking)
+        {
+            if (direction != Vector3.Zero)
+            {
+                if (_animPlayer.CurrentAnimation != "run")
+                    _animPlayer.Play("run");
+            }
+            else if (_animPlayer.CurrentAnimation == "run")
+            {
+                _animPlayer.Stop();
+            }
+        }
+
         if (_weapon == Weapon.Ranged)
         {
             var attackDir = Vector3.Zero;
@@ -179,6 +261,16 @@ public partial class Player : CharacterBody3D
 
     private void SpawnMeleeHitbox(Vector3 dir)
     {
+        // Face attack direction and play slash animation
+        _model.GlobalRotation = new Vector3(0, Mathf.Atan2(dir.X, dir.Z), 0);
+        if (_animPlayer != null)
+        {
+            _isAttacking = true;
+            string slash = _slashToggle ? "slash_in" : "slash_out";
+            _slashToggle = !_slashToggle;
+            _animPlayer.Play(slash);
+        }
+
         var shape = new BoxShape3D();
         shape.Size = new Vector3(MeleeRange * 0.56f, 1f, MeleeRange * 0.56f);
         var query = new PhysicsShapeQueryParameters3D();
@@ -251,6 +343,7 @@ public partial class Player : CharacterBody3D
 
     private void SpawnProjectile(Vector3 dir)
     {
+        _model.GlobalRotation = new Vector3(0, Mathf.Atan2(dir.X, dir.Z), 0);
         var proj = ProjectileScene.Instantiate<Projectile>();
         proj.Direction = dir;
         proj.Damage = ProjectileDamage;
