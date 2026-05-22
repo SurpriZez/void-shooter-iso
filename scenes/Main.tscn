@@ -7,7 +7,28 @@
 [ext_resource type="PackedScene" path="res://scenes/EnemySpawner.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/ItemPedestal.tscn" id="6"]
 
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 1
+background_color = Color(0.05, 0.05, 0.1, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.3, 0.35, 0.5, 1)
+ambient_light_energy = 0.4
+
 [node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-50, 45, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="FillLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-20, -135, 0)
+light_color = Color(0.4, 0.5, 0.7, 1)
+light_energy = 0.3
 
 [node name="WorldSetup" type="Node3D" parent="."]
 script = ExtResource("2")
